@@ -9,6 +9,8 @@ build-backend = "hatchling.build"
 name = "eng_pyramid"
 dynamic = ["version"]
 dependencies = [
+  "sqlalchemy<=2.0",
+  "testing.postgresql",
 ]
 authors = [
   { name="Colin Higgs", email="colin.higgs@ed.ac.uk" },

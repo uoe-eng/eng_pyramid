@@ -164,12 +164,9 @@ class DataFactory(DataCreator):
         warn(f"_add_test_bulk not implemented for {self.__class__}")
 
 
-def add_test_data(args, factory):
-    if args.test_data:
-        args.test_corner = True
-        args.test_bulk = True
+def add_test_data(factory, test_corner=False, test_bulk=False):
     factory.add_initial()
-    if args.test_corner:
+    if test_corner:
         factory.add_test_corner()
-    if args.test_bulk:
+    if test_bulk:
         factory.add_test_bulk()

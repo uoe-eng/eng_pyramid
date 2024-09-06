@@ -123,13 +123,13 @@ def add_db_parser_args(parser):
 
 class DataCreator(Protocol):
 
-    def _add_initial(self):
+    def add_initial(self):
         ...
 
-    def _add_test_corner(self):
+    def add_test_corner(self):
         ...
 
-    def _add_test_bulk(self):
+    def add_test_bulk(self):
         ...
 
 
@@ -155,13 +155,13 @@ class DataFactory(DataCreator):
         self._add_test_bulk()
 
     def _add_initial(self):
-        warn(f"_add_initial not implemented for {self.__class__}")
+        pass
 
     def _add_test_corner(self):
-        warn(f"_add_test_corner not implemented for {self.__class__}")
+        pass
 
     def _add_test_bulk(self):
-        warn(f"_add_test_bulk not implemented for {self.__class__}")
+        pass
 
 
 def add_test_data(factory, test_corner=False, test_bulk=False):

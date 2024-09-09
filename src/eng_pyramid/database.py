@@ -216,3 +216,19 @@ class DBMap(Mapping):
 
     def __len__(self):
         return len(self.data)
+
+
+def depends(test, method, factory_name=None):
+    def _decorator(func):
+        from functools import wraps
+
+        @wraps(func)
+        def _wrapper(self, *args, **kwargs):
+            if not test(self):
+                pass_ref = self
+                if factory_name:
+                    pass_ref = self.parent.factories[factory_name]
+                method(pass_ref)
+            func(self, *args, **kwargs)
+        return _wrapper
+    return _decorator

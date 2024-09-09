@@ -6,11 +6,14 @@ import urllib.parse
 from collections import (
     namedtuple,
 )
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from sqlalchemy import (
     Column,
     ForeignKey,
     func,
+    select,
+    text,
 )
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.orm import (
@@ -170,3 +173,46 @@ def add_test_data(factory, test_corner=False, test_bulk=False):
         factory.add_test_corner()
     if test_bulk:
         factory.add_test_bulk()
+
+class DBMap(Mapping):
+
+    def __init__(self, dbsession, model, keycol=None, where='', dict_keyfunc=None):
+        self.dbsession = dbsession
+        self.model = model
+        if keycol is None:
+            pks = inspect(model).primary_key
+            if len(pks) == 1:
+                keycol = pks[0].name
+            else:
+                keycol = tuple(col.name for col in pks)
+        self.keycol = keycol
+        self.where = where
+        if dict_keyfunc:
+            self.dict_keyfunc = dict_keyfunc
+        else:
+            self.dict_keyfunc = self.default_keyfunc
+        self.refresh()
+
+    def default_keyfunc(self, obj):
+        if isinstance(self.keycol, str):
+            return getattr(obj, self.keycol)
+        else:
+            return tuple(getattr(obj, key) for key in self.keycol)
+
+    def refresh(self):
+        # slct = select(self.model)
+        self.data = {
+            self.dict_keyfunc(obj): obj for obj in
+            self.dbsession.execute(
+                select(self.model).where(text(self.where))
+            ).scalars().all()
+        }
+
+    def __getitem__(self, key):
+        return self.data[key]
+
+    def __iter__(self):
+        return iter(self.data)
+
+    def __len__(self):
+        return len(self.data)

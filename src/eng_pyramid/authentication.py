@@ -105,7 +105,7 @@ def session_from_jwt(request):
 def session_from_debug(request):
     if not asbool(request.registry.settings.get('login.on', 'true')):
         if not request.session.get('id'):
-            request.session['id'] = request.registry.settings.get('login.debug_username', 'guest'))
+            request.session['id'] = request.registry.settings.get('login.debug_username', 'guest')
         return True
     return False
 

@@ -55,7 +55,7 @@ def authentication_view_deriver(view, info):
             'login.sessions.non_interactive',
             'jwt debug'
         ))):
-            sess_func = getattr(locals, f'session_from_{auth_type_name}')
+            sess_func = getattr(locals(), f'session_from_{auth_type_name}')
             if sess_func(request):
                 populator(request, auth_type=auth_type_name)
                 break   # break rather than return so that it's still possible to

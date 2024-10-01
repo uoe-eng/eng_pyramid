@@ -10,7 +10,7 @@ name = "eng_pyramid"
 dynamic = ["version"]
 dependencies = [
   "authomatic",
-  "jwt",
+  "pyjwt",
   "ldap3",
   "pyramid",
   "sqlalchemy<=2.0",

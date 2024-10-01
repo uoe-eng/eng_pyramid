@@ -9,6 +9,10 @@ build-backend = "hatchling.build"
 name = "eng_pyramid"
 dynamic = ["version"]
 dependencies = [
+  "authomatic",
+  "jwt",
+  "ldap3",
+  "pyramid",
   "sqlalchemy<=2.0",
   "testing.postgresql",
 ]

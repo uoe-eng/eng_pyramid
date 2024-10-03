@@ -45,6 +45,7 @@ def default_session_populator(request, auth_type=None):
 def authentication_view_deriver(view, info):
     def wrapped_view(context, request):
         settings = request.registry.settings
+        log.debug('Initiating authentication_view_deriver.')
 
         try:
             populator = request.registry.session_populator
@@ -98,14 +99,21 @@ def session_from_jwt(request):
         session = request.session
         username = decoded['user_id']
         session['id'] = username
+        session['authen_type'] = 'jwt'
+        try:
+            session['iat'] = decoded['iat']
+        except KeyError:
+            pass
         return True
     return False
 
 
 def session_from_debug(request):
     if not asbool(request.registry.settings.get('login.on', 'true')):
-        if not request.session.get('id'):
-            request.session['id'] = request.registry.settings.get('login.debug_username', 'guest')
+        session = request.session
+        if not session.get('id'):
+            session['id'] = request.registry.settings.get('login.debug_username', 'guest')
+            session['authen_type'] = 'debug'
         return True
     return False
 
@@ -133,6 +141,7 @@ class AuthomaticView:
                 raise HTTPUnauthorized('Authentication not complete.')
             elif result.user:
                 result.user.update()
+                session['authen_type'] = self.__class__.__name__  # Default - can be overwritten by uinfo.
                 uinfo = self.user_info(result.user)
                 session.update(uinfo)
                 session.cookie_expires = uinfo['expiry']

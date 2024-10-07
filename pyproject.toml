@@ -12,6 +12,7 @@ dependencies = [
   "authomatic",
   "pyjwt",
   "ldap3",
+  "psycopg2-binary",
   "pyramid",
   "sqlalchemy<=2.0",
   "testing.postgresql",

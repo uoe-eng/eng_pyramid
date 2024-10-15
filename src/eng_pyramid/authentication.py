@@ -14,11 +14,25 @@ from pyramid.httpexceptions import (
 )
 from pyramid.response import Response
 from pyramid.settings import aslist, asbool
-from urllib.parse import quote
+from urllib.parse import quote, unquote
 
 from .ldap import *
 
 log = logging.getLogger(__name__)
+
+
+def view_info(**kwargs):
+    def decorator(v):
+        v.__info__ = kwargs
+        return v
+    return decorator
+
+
+def conditional_unquote(v):
+    if isinstance(v, str):
+        return unquote(v)
+    else:
+        return v
 
 
 def add_login_routes(config):
@@ -132,6 +146,23 @@ def session_from_debug(request):
         return True
     return False
 
+
+def session_info(request):
+    # print(capabilities(request.dbsession, request.session.get('active_memberOf', set())))
+    info = {k: conditional_unquote(v) for k,v in request.session.items() if not k.startswith('_')}
+    return info
+
+
+@view_info(renderer='/templates/debug_login_form.jinja2')
+def debug_login_form(request):
+    if 'submit' in request.params:
+        request.session.invalidate()
+        session = request.session
+        session['id'] = request.params.get('username')
+        session['authen_type'] = 'debug_login_form'
+        return HTTPFound(request.params.get('user_state', request.path))
+
+    return dict(session=session_info(request))
 
 class AuthomaticView:
     provider_name = None

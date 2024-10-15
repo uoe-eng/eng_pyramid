@@ -21,6 +21,21 @@ from .ldap import *
 log = logging.getLogger(__name__)
 
 
+def add_login_routes(config):
+    settings = config.registry.settings
+    prefix = settings.get('pyramid_jsonapi.route_pattern_prefix', '')
+    config.add_route('login', f'{prefix}/login/{{login_method}}')
+    for method_name in aslist(settings.get('login.methods', '')):
+        func = globals()[method_name]
+        view_params = dict(
+            route_name='login',
+            match_param=f'login_method={method_name}',
+            renderer='json'
+        )
+        view_params.update(**getattr(func, '__info__', {}))
+        config.add_view(func, **view_params)
+
+
 def default_session_populator(request, auth_type=None):
     '''
     Populate the session dictionary. The only thing that's guaranteed to be in the session

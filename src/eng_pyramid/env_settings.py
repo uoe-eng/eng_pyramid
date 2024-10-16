@@ -53,7 +53,7 @@ def settings_from_env(prefix='ENG_', settings_map=DB_ENV_MAP):
     # Find all env variables which start with <prefix> and transform the name
     # with '__' (double under) going to '.'.
     env_settings.update(
-        {k[4:].replace('__', '.').lower():v for k,v in os.environ.items() if k.startswith(prefix)}
+        {k[len(prefix):].replace('__', '.').lower():v for k,v in os.environ.items() if k.startswith(prefix)}
     )
 
     return env_settings

@@ -53,7 +53,7 @@ def add_login_routes(config):
         config.add_view(func, **view_params)
 
 
-def default_session_populator(request, auth_type=None):
+def default_session_populator(request):
     '''
     Populate the session dictionary. The only thing that's guaranteed to be in the session
     is the username as session['id'].
@@ -78,15 +78,19 @@ def default_session_populator(request, auth_type=None):
             session.update({'active_memberOf': session['memberOf'].copy})
 
 
+def populator(request):
+    try:
+        populator = request.registry.session_populator
+    except AttributeError:
+        populator = default_session_populator
+    return populator
+
+
 def authentication_view_deriver(view, info):
     def wrapped_view(context, request):
         settings = request.registry.settings
         log.debug('Initiating authentication_view_deriver.')
 
-        try:
-            populator = request.registry.session_populator
-        except AttributeError:
-            populator = default_session_populator
         # Authen / populate session from direct methods (jwt, certs, etc)
         for auth_type_name in (aslist(settings.get(
             'login.sessions.non_interactive',
@@ -94,7 +98,7 @@ def authentication_view_deriver(view, info):
         ))):
             sess_func = globals()[f'session_from_{auth_type_name}']
             if sess_func(request):
-                populator(request, auth_type=auth_type_name)
+                populator(request)(request)
                 break   # break rather than return so that it's still possible to
                         # reach the login page
 
@@ -200,6 +204,7 @@ class AuthomaticView:
                 uinfo = self.user_info(result.user)
                 session.update(uinfo)
                 session.cookie_expires = uinfo['expiry']
+                populator(request)(request)
                 redirect_url = oauth2.OAuth2.decode_state(request.params.get(self.state_param)) or request.route_url('session_info')
                 raise HTTPFound(redirect_url)
         return response

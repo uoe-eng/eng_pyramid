@@ -58,6 +58,7 @@ def default_session_populator(request, auth_type=None):
     Populate the session dictionary. The only thing that's guaranteed to be in the session
     is the username as session['id'].
     '''
+    log.debug('Running default session populator.')
     session = request.session
     settings = request.registry.settings
     username = session['id']
@@ -69,7 +70,10 @@ def default_session_populator(request, auth_type=None):
         session['active_id'] = username
 
     if asbool(settings.get('login.sessions.add_ldap_groups', 'false')):
-        session.update(ldap_info(request, username))
+        ldinfo = ldap_info(request, username)
+        log.debug('Adding LDAP info to session:')
+        log.debug(ldinfo)
+        session.update(ldinfo)
         if asbool(settings.get('login.sessions.add_active_user')):
             session.update({'active_memberOf': session['memberOf'].copy})
 

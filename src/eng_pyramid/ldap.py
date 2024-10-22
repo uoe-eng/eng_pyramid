@@ -9,7 +9,6 @@ from functools import cache
 log = logging.getLogger(__name__)
 
 
-@cache
 def get_ldap_connection(settings):
     if asbool(settings.get('ldap.fake_server')):
         ldap_server = ldap3.Server('eps_fake_ldap')

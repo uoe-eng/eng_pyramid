@@ -14,6 +14,7 @@ dependencies = [
   "ldap3",
   "psycopg2-binary",
   "pyramid",
+  "pyramid_beaker",
   "sqlalchemy<=2.0",
   "testing.postgresql",
 ]

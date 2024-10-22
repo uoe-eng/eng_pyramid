@@ -1,5 +1,8 @@
+import beaker.ext.sqla
 import jwt
 import logging
+import sqlalchemy
+import tempfile
 import time
 from authomatic import Authomatic
 from authomatic.adapters import WebObAdapter
@@ -251,3 +254,16 @@ class Google(AuthomaticView):
         session['id'] = quote(user.id)
         session['expiry'] = user.credentials.expiration_time
         return session
+
+def add_beaker_cache(settings, engine, metadata):
+    if settings.get('session.type') == 'ext:sqla':
+        beaker.ext.sqla.sa = sqlalchemy
+        session_table = beaker.ext.sqla.make_cache_table(metadata)
+        # Recreate session table to clear old session info
+        session_table.drop(bind=engine, checkfirst=True)
+        session_table.create(bind=engine, checkfirst=True)
+        settings.update({
+            'session.bind': engine,
+            'session.table': session_table,
+            'session.data_dir': tempfile.mkdtemp(),
+        })

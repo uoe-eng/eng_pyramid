@@ -123,7 +123,7 @@ def session_from_jwt(request):
         try:
             decoded = jwt.decode(token, jwt_secret, algorithms="HS256")
         except jwt.exceptions.PyJWTError as err:
-            raise HTTPBadRequest from err
+            raise HTTPBadRequest('Could not decode token with jwt_secret.') from err
         log.debug(f'decoded token: {decoded}')
         session = request.session
         username = decoded['user_id']

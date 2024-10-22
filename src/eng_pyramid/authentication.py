@@ -191,6 +191,7 @@ class AuthomaticView:
                 raise HTTPUnauthorized('Authentication not complete.')
             elif result.user:
                 result.user.update()
+                log.debug(f'setting authen_type to {self.__class__.__name__}')
                 session['authen_type'] = self.__class__.__name__  # Default - can be overwritten by uinfo.
                 uinfo = self.user_info(result.user)
                 session.update(uinfo)

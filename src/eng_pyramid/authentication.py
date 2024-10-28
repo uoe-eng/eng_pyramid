@@ -47,7 +47,8 @@ def add_login_routes(config):
         view_params = dict(
             route_name='login',
             match_param=f'login_method={method_name}',
-            renderer='json'
+            renderer='json',
+            http_cache=0,  # don't cache login views.
         )
         view_params.update(**getattr(func, '__info__', {}))
         config.add_view(func, **view_params)

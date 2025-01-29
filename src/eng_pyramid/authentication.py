@@ -119,6 +119,38 @@ def authentication_view_deriver(view, info):
     return wrapped_view
 
 
+def authentication_tween_factory(handler, registry):
+    def authentication_tween(request):
+        settings = registry.settings
+        log.debug('Initiating authentication_tween.')
+
+        # Authen / populate session from direct methods (jwt, certs, etc)
+        for auth_type_name in (aslist(settings.get(
+            'login.sessions.non_interactive',
+            'jwt debug'
+        ))):
+            sess_func = globals()[f'session_from_{auth_type_name}']
+            if sess_func(request):
+                populator(request)(request)
+                break   # break rather than return so that it's still possible to
+                        # reach the login page
+
+        if request.matched_route and request.matched_route.name in {'login', 'login_main'}:
+            # Heading to the login view. You shall pass.
+            return handler(request)
+
+        # check if authentication is valid
+        if not request.session.get('expiry', 0) - time.time() > 0:
+            # Not logged in. You shall not pass.
+            return HTTPUnauthorized('Not logged in to API')
+
+        # authz
+        # alllowed at all?
+        #     401
+        return handler(request)
+    return authentication_tween
+
+
 def get_jwt_secret(request):
     try:
         return request.registry.settings['jwt.secret']

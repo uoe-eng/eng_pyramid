@@ -9,6 +9,7 @@ from authomatic.adapters import WebObAdapter
 from authomatic.providers import oauth2
 from functools import cached_property
 from pyramid.httpexceptions import (
+    HTTPError,
     HTTPBadRequest,
     HTTPForbidden,
     HTTPFound,
@@ -19,6 +20,7 @@ from pyramid.response import Response
 from pyramid.settings import aslist, asbool
 from urllib.parse import quote, unquote
 
+from . import error_response
 from .ldap import *
 
 log = logging.getLogger(__name__)
@@ -97,9 +99,15 @@ def authentication_view_deriver(view, info):
             'login.sessions.non_interactive',
             'jwt debug'
         ))):
+            log.debug(f'  trying to authenticate using method {auth_type_name}')
             sess_func = globals()[f'session_from_{auth_type_name}']
-            if sess_func(request):
+            try:
+                sess_created = sess_func(request)
+            except HTTPError as ex:
+                return ex
+            if sess_created:
                 populator(request)(request)
+                log.debug(f'  session populated using {populator}')
                 break   # break rather than return so that it's still possible to
                         # reach the login page
 
@@ -115,7 +123,10 @@ def authentication_view_deriver(view, info):
         # authz
         # alllowed at all?
         #     401
-        return view(context, request)
+        log.debug('authen running the passed in view.')
+        res = view(context, request)
+        log.debug('authen returning the result.')
+        return res
     return wrapped_view
 
 
@@ -135,7 +146,9 @@ def authentication_tween_factory(handler, registry):
                 break   # break rather than return so that it's still possible to
                         # reach the login page
 
+        # log.debug(f'matched_route name: {request.matched_route.name}')
         if request.matched_route and request.matched_route.name in {'login', 'login_main'}:
+            log.debug('  heading to the loging view...')
             # Heading to the login view. You shall pass.
             return handler(request)
 
